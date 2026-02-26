@@ -1,0 +1,62 @@
+"use client";
+
+import { useState } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+import UserListItem from "./UserListItem";
+
+export default function UserSearch({
+    onSelectUser,
+}: {
+    onSelectUser: (userId: string) => void;
+}) {
+    const [searchQuery, setSearchQuery] = useState("");
+    const allUsers = useQuery(api.users.getAllUsers);
+
+    // Filter users by name (client-side for simplicity + real-time)
+    const filteredUsers = allUsers?.filter((user) =>
+        user.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    return (
+        <div className="flex flex-col gap-2">
+            {/* Search input */}
+            <div className="relative px-3">
+                <Search className="absolute left-5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                <Input
+                    placeholder="Search users..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-8"
+                />
+            </div>
+
+            {/* User list */}
+            <div className="flex flex-col">
+                {!allUsers && (
+                    <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+                        Loading users...
+                    </p>
+                )}
+
+                {filteredUsers?.length === 0 && (
+                    <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+                        {searchQuery
+                            ? `No users found matching "${searchQuery}"`
+                            : "No other users yet. Share the app!"}
+                    </p>
+                )}
+
+                {filteredUsers?.map((user) => (
+                    <UserListItem
+                        key={user._id}
+                        user={user}
+                        onClick={() => onSelectUser(user._id)}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+}
