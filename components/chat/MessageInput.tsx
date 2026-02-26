@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 
 interface MessageInputProps {
     conversationId: Id<"conversations">;
@@ -16,6 +17,7 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
     const [isSending, setIsSending] = useState(false);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const sendMessage = useMutation(api.messages.sendMessage);
+    const { onType, onSend: onTypingSend } = useTypingIndicator(conversationId);
 
     const handleSend = async (e?: FormEvent) => {
         e?.preventDefault();
@@ -29,8 +31,13 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
                 content: trimmed,
             });
             setContent("");
-            // Re-focus the input after sending
+            onTypingSend(); // Clear typing indicator
             inputRef.current?.focus();
+
+            // Reset textarea height
+            if (inputRef.current) {
+                inputRef.current.style.height = "auto";
+            }
         } catch (err) {
             console.error("Failed to send message:", err);
         } finally {
@@ -38,7 +45,7 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
         }
     };
 
-    // Handle Enter to send, Shift+Enter for new line
+    // Enter to send, Shift+Enter for new line
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
@@ -46,9 +53,11 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
         }
     };
 
-    // Auto-resize textarea
+    // Auto-resize textarea + trigger typing indicator
     const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setContent(e.target.value);
+        onType(); // Trigger typing indicator
+
         const textarea = e.target;
         textarea.style.height = "auto";
         textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;

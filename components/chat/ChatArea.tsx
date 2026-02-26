@@ -1,13 +1,14 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, MessageSquare } from "lucide-react";
+import { Loader2, MessageSquare, ChevronDown } from "lucide-react";
+import { useSmartScroll } from "@/hooks/useSmartScroll";
 import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
+import TypingIndicator from "./TypingIndicator";
 import EmptyState from "./EmptyState";
 
 interface ChatAreaProps {
@@ -16,17 +17,28 @@ interface ChatAreaProps {
 
 export default function ChatArea({ conversationId }: ChatAreaProps) {
     const messages = useQuery(api.messages.getMessages, { conversationId });
-    const bottomRef = useRef<HTMLDivElement>(null);
+    const markAsRead = useMutation(api.readReceipts.markAsRead);
+    const {
+        scrollRef,
+        bottomRef,
+        showNewMessages,
+        handleScroll,
+        scrollToBottom,
+    } = useSmartScroll(messages?.length ?? 0);
 
-    // Auto-scroll to bottom when new messages arrive
+    // Mark conversation as read when viewing it
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages?.length]);
+        markAsRead({ conversationId }).catch(() => { });
+    }, [conversationId, markAsRead, messages?.length]);
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full relative">
             {/* Messages area */}
-            <ScrollArea className="flex-1">
+            <div
+                ref={scrollRef}
+                onScroll={handleScroll}
+                className="flex-1 overflow-y-auto"
+            >
                 <div className="flex flex-col py-4 min-h-full">
                     {/* Loading state */}
                     {messages === undefined && (
@@ -35,7 +47,7 @@ export default function ChatArea({ conversationId }: ChatAreaProps) {
                         </div>
                     )}
 
-                    {/* Empty state — no messages */}
+                    {/* Empty state */}
                     {messages?.length === 0 && (
                         <EmptyState
                             icon={MessageSquare}
@@ -46,11 +58,11 @@ export default function ChatArea({ conversationId }: ChatAreaProps) {
 
                     {/* Message list */}
                     {messages?.map((msg, idx) => {
-                        // Show avatar for first message or when sender changes
                         const prevMsg = idx > 0 ? messages[idx - 1] : null;
                         const showAvatar =
                             !msg.isOwn &&
-                            (!prevMsg || prevMsg.sender?._id !== msg.sender?._id);
+                            (!prevMsg ||
+                                prevMsg.sender?._id !== msg.sender?._id);
 
                         return (
                             <MessageBubble
@@ -64,7 +76,21 @@ export default function ChatArea({ conversationId }: ChatAreaProps) {
                     {/* Scroll anchor */}
                     <div ref={bottomRef} />
                 </div>
-            </ScrollArea>
+            </div>
+
+            {/* Typing indicator */}
+            <TypingIndicator conversationId={conversationId} />
+
+            {/* New messages button (shown when scrolled up) */}
+            {showNewMessages && (
+                <button
+                    onClick={scrollToBottom}
+                    className="absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-lg hover:bg-primary/90 transition-colors animate-in fade-in slide-in-from-bottom-2"
+                >
+                    <ChevronDown className="size-3.5" />
+                    New messages
+                </button>
+            )}
 
             {/* Message input */}
             <MessageInput conversationId={conversationId} />

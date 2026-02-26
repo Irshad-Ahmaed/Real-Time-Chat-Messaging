@@ -6,6 +6,7 @@ import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
 // Validate env var exists
 if (!process.env.NEXT_PUBLIC_CONVEX_URL) {
@@ -19,6 +20,9 @@ function UserSync() {
     const { user, isLoaded } = useUser();
     const { isAuthenticated } = useConvexAuth();
     const createOrUpdateUser = useMutation(api.users.createOrUpdateUser);
+
+    // Track online/offline status
+    useOnlineStatus();
 
     useEffect(() => {
         // Wait for BOTH Clerk user AND Convex auth to be ready

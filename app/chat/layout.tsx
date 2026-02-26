@@ -1,7 +1,7 @@
 "use client";
 
 import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import Sidebar from "@/components/chat/Sidebar";
@@ -20,6 +20,9 @@ export default function ChatLayout({
 }: {
     children: React.ReactNode;
 }) {
+    const pathname = usePathname();
+    const isAtRoot = pathname === "/chat";
+
     return (
         <>
             <AuthLoading>
@@ -34,13 +37,19 @@ export default function ChatLayout({
 
             <Authenticated>
                 <div className="flex h-screen overflow-hidden bg-background">
-                    {/* Sidebar — hidden on mobile, shown on md+ */}
-                    <aside className="hidden md:flex w-80 flex-shrink-0">
+                    {/* Sidebar — hidden on mobile when in a conversation, shown on md+ or when at /chat */}
+                    <aside
+                        className={`flex-shrink-0 w-full md:w-80 border-r bg-background 
+                        ${isAtRoot ? "flex" : "hidden md:flex"}`}
+                    >
                         <Sidebar />
                     </aside>
 
-                    {/* Main chat area */}
-                    <main className="flex-1 flex flex-col min-w-0">
+                    {/* Main chat area — hidden on mobile when at /chat, shown on md+ or when in a conversation */}
+                    <main
+                        className={`flex-1 flex flex-col min-w-0 
+                        ${isAtRoot ? "hidden md:flex" : "flex"}`}
+                    >
                         {children}
                     </main>
                 </div>

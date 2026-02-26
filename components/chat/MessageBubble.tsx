@@ -82,7 +82,7 @@ export default function MessageBubble({
                 </div>
 
                 {/* Timestamp */}
-                <span className="text-[10px] text-muted-foreground mt-0.5 mx-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-[10px] text-muted-foreground mt-0.5 mx-1 opacity-50 group-hover:opacity-100 transition-opacity">
                     {formatTimestamp(message.timestamp)}
                 </span>
             </div>
