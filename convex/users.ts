@@ -106,6 +106,29 @@ export const setOnlineStatus = mutation({
     },
 });
 
+// Heartbeat to keep user online
+export const updatePresence = mutation({
+    args: {},
+    handler: async (ctx) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) return;
+
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_clerkId", (q) =>
+                q.eq("clerkId", identity.subject)
+            )
+            .unique();
+
+        if (user) {
+            await ctx.db.patch(user._id, {
+                isOnline: true,
+                lastSeen: Date.now(),
+            });
+        }
+    },
+});
+
 // --- Webhook helper functions (called by HTTP actions, no user auth) ---
 
 // Look up a user by Clerk ID — used by webhook handler (internal only)

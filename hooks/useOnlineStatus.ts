@@ -1,31 +1,44 @@
 "use client";
 
-import { useEffect } from "react";
-import { useMutation } from "convex/react";
+import { useEffect, useCallback } from "react";
+import { useMutation, useQuery } from "convex/react";
 import { useConvexAuth } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
-// Tracks user online/offline status via visibility + beforeunload
+const HEARTBEAT_INTERVAL = 30000; // 30 seconds
+
+// Tracks user online/offline status reliably via heartbeat
 export function useOnlineStatus() {
     const { isAuthenticated } = useConvexAuth();
+    const updatePresence = useMutation(api.users.updatePresence);
     const setOnlineStatus = useMutation(api.users.setOnlineStatus);
+
+    const markOnline = useCallback(() => {
+        if (!isAuthenticated) return;
+        updatePresence().catch(() => { });
+    }, [isAuthenticated, updatePresence]);
 
     useEffect(() => {
         if (!isAuthenticated) return;
 
-        // Set online when component mounts
-        setOnlineStatus({ isOnline: true }).catch(() => { });
+        // Initial online ping
+        markOnline();
 
-        // Handle visibility changes (tab switch, minimize)
+        // Start heartbeat ping every 30s
+        const intervalId = setInterval(markOnline, HEARTBEAT_INTERVAL);
+
+        // Handle visibility changes (update immediately when returning to tab)
         const handleVisibilityChange = () => {
-            setOnlineStatus({
-                isOnline: document.visibilityState === "visible",
-            }).catch(() => { });
+            if (document.visibilityState === "visible") {
+                markOnline();
+            } else {
+                // If they hide the tab, mark them offline immediately for faster UI updates
+                setOnlineStatus({ isOnline: false }).catch(() => { });
+            }
         };
 
         // Handle page close / navigation away
         const handleBeforeUnload = () => {
-            // Use sendBeacon for reliability on page unload
             setOnlineStatus({ isOnline: false }).catch(() => { });
         };
 
@@ -33,12 +46,10 @@ export function useOnlineStatus() {
         window.addEventListener("beforeunload", handleBeforeUnload);
 
         return () => {
-            document.removeEventListener(
-                "visibilitychange",
-                handleVisibilityChange
-            );
+            clearInterval(intervalId);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
             window.removeEventListener("beforeunload", handleBeforeUnload);
             setOnlineStatus({ isOnline: false }).catch(() => { });
         };
-    }, [isAuthenticated, setOnlineStatus]);
+    }, [isAuthenticated, markOnline, setOnlineStatus]);
 }

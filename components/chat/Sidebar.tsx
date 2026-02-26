@@ -36,12 +36,14 @@ export default function Sidebar() {
     };
 
     return (
-        <div className="flex flex-col h-full border-r bg-background">
+        <div className="flex flex-col h-full bg-transparent">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b">
-                <div className="flex items-center gap-2">
-                    <MessageCircle className="size-5 text-primary" />
-                    <h1 className="text-lg font-semibold">Chats</h1>
+            <div className="flex items-center justify-between px-4 py-3.5 border-b border-border/40 bg-background/95 backdrop-blur z-10 sticky top-0">
+                <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 bg-primary/10 rounded-xl">
+                        <MessageCircle className="size-5 text-primary" />
+                    </div>
+                    <h1 className="text-xl font-bold tracking-tight text-foreground">Chats</h1>
                 </div>
                 <div className="flex items-center gap-1">
                     <GroupChatDialog />
@@ -49,7 +51,7 @@ export default function Sidebar() {
                     {/* Toggle user search */}
                     <button
                         onClick={() => setShowUserSearch(!showUserSearch)}
-                        className="p-2 rounded-md hover:bg-accent transition-colors"
+                        className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-200"
                         title={showUserSearch ? "Show chats" : "Find users"}
                     >
                         {showUserSearch ? (

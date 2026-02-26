@@ -39,7 +39,7 @@ export default function ChatLayout({
                 <div className="flex h-screen overflow-hidden bg-background">
                     {/* Sidebar — hidden on mobile when in a conversation, shown on md+ or when at /chat */}
                     <aside
-                        className={`flex-shrink-0 w-full md:w-80 border-r bg-background 
+                        className={`flex-shrink-0 w-full md:w-[320px] border-r border-border/40 bg-card/50 shadow-sm z-10 
                         ${isAtRoot ? "flex" : "hidden md:flex"}`}
                     >
                         <Sidebar />

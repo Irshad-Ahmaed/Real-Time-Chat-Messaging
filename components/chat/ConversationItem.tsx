@@ -40,7 +40,9 @@ export default function ConversationItem({ conversation }: { conversation: any }
     return (
         <button
             onClick={() => router.push(`/chat/${conversation._id}`)}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl mx-2 transition-all duration-200 text-left w-[calc(100%-16px)] ${isActive ? "bg-accent shadow-sm" : "hover:bg-accent/40"
+            className={`group flex items-center gap-3 px-3 py-3 rounded-2xl mx-2 mb-1 transition-all duration-300 text-left w-[calc(100%-16px)] ${isActive
+                ? "bg-background shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-border/60"
+                : "border border-transparent hover:bg-muted/60"
                 }`}
         >
             <div className="relative flex-shrink-0">
@@ -57,7 +59,7 @@ export default function ConversationItem({ conversation }: { conversation: any }
 
             <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium truncate">
+                    <p className={`text-[15px] tracking-tight truncate ${isActive ? "font-semibold text-foreground" : "font-medium text-foreground/90 group-hover:text-foreground"}`}>
                         {displayName}
                     </p>
                     <div className="flex items-center gap-2 flex-shrink-0 ml-2">

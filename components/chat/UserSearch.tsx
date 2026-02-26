@@ -24,13 +24,13 @@ export default function UserSearch({
     return (
         <div className="flex flex-col gap-2">
             {/* Search input */}
-            <div className="relative px-3">
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <div className="relative px-3 mt-1 mb-2">
+                <Search className="absolute left-6 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/70" />
                 <Input
                     placeholder="Search users..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8"
+                    className="pl-9 bg-muted/40 border-border/50 hover:bg-muted/60 focus-visible:ring-1 focus-visible:ring-primary/30 transition-all rounded-xl h-10 shadow-none"
                 />
             </div>
 
