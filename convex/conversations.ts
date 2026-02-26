@@ -155,3 +155,43 @@ export const getConversation = query({
         };
     },
 });
+
+// Create a new group conversation
+export const createGroup = mutation({
+    args: {
+        participantIds: v.array(v.id("users")),
+        groupName: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) throw new Error("Not authenticated");
+
+        const currentUser = await ctx.db
+            .query("users")
+            .withIndex("by_clerkId", (q) =>
+                q.eq("clerkId", identity.subject)
+            )
+            .unique();
+        if (!currentUser) throw new Error("User not found");
+
+        if (args.participantIds.length < 2) {
+            throw new Error("Group must have at least 2 other members");
+        }
+
+        const trimmedName = args.groupName.trim();
+        if (!trimmedName) {
+            throw new Error("Group name is required");
+        }
+
+        const participants = [...new Set([...args.participantIds, currentUser._id])];
+
+        const conversationId = await ctx.db.insert("conversations", {
+            isGroup: true,
+            groupName: trimmedName,
+            participants,
+            lastMessageTime: Date.now(),
+        });
+
+        return conversationId;
+    },
+});

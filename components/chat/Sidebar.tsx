@@ -9,8 +9,10 @@ import { UserButton } from "@clerk/nextjs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { MessageCircle, Users, Search } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import ConversationItem from "./ConversationItem";
 import UserSearch from "./UserSearch";
+import GroupChatDialog from "./GroupChatDialog";
 
 export default function Sidebar() {
     const router = useRouter();
@@ -41,7 +43,9 @@ export default function Sidebar() {
                     <MessageCircle className="size-5 text-primary" />
                     <h1 className="text-lg font-semibold">Chats</h1>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                    <GroupChatDialog />
+
                     {/* Toggle user search */}
                     <button
                         onClick={() => setShowUserSearch(!showUserSearch)}
@@ -76,10 +80,18 @@ export default function Sidebar() {
                 ) : (
                     <div className="py-2">
                         {/* Loading state */}
-                        {!conversations && (
-                            <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-                                Loading conversations...
-                            </p>
+                        {conversations === undefined && (
+                            <div className="flex flex-col gap-3 px-4 py-4">
+                                {[1, 2, 3, 4, 5].map((i) => (
+                                    <div key={i} className="flex items-center gap-3">
+                                        <Skeleton className="h-11 w-11 rounded-full" />
+                                        <div className="flex-1 space-y-2">
+                                            <Skeleton className="h-4 w-[120px]" />
+                                            <Skeleton className="h-3 w-[200px]" />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         )}
 
                         {/* Empty state */}

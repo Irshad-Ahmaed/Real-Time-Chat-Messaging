@@ -5,6 +5,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import UserListItem from "./UserListItem";
 
 export default function UserSearch({
@@ -35,10 +36,18 @@ export default function UserSearch({
 
             {/* User list */}
             <div className="flex flex-col">
-                {!allUsers && (
-                    <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-                        Loading users...
-                    </p>
+                {allUsers === undefined && (
+                    <div className="flex flex-col gap-3 px-3 py-4">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="flex items-center gap-3">
+                                <Skeleton className="h-10 w-10 rounded-full" />
+                                <div className="flex-1 space-y-2">
+                                    <Skeleton className="h-4 w-[100px]" />
+                                    <Skeleton className="h-3 w-[150px]" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 )}
 
                 {filteredUsers?.length === 0 && (

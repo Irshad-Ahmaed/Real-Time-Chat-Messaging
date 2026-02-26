@@ -3,6 +3,17 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatTimestamp } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+import { MoreHorizontal, Trash2 } from "lucide-react";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import MessageReactions from "./MessageReactions";
 
 interface MessageBubbleProps {
     message: {
@@ -15,6 +26,11 @@ interface MessageBubbleProps {
             name: string;
             imageUrl: string;
         } | null;
+        reactions?: {
+            emoji: string;
+            count: number;
+            hasReacted: boolean;
+        }[];
     };
     showAvatar?: boolean;
 }
@@ -23,6 +39,16 @@ export default function MessageBubble({
     message,
     showAvatar = true,
 }: MessageBubbleProps) {
+    const deleteMessage = useMutation(api.messages.deleteMessage);
+
+    const handleDelete = async () => {
+        try {
+            await deleteMessage({ messageId: message._id as Id<"messages"> });
+        } catch (error) {
+            console.error("Failed to delete message:", error);
+        }
+    };
+
     const initials = message.sender?.name
         ?.split(" ")
         .map((n) => n[0])
@@ -66,20 +92,52 @@ export default function MessageBubble({
                     </span>
                 )}
 
-                <div
-                    className={cn(
-                        "rounded-2xl px-3.5 py-2 text-sm leading-relaxed",
-                        message.isDeleted
-                            ? "bg-muted text-muted-foreground italic"
-                            : message.isOwn
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted"
+                <div className={cn("flex items-center gap-2", message.isOwn ? "flex-row-reverse" : "flex-row")}>
+                    <div
+                        className={cn(
+                            "rounded-2xl px-3.5 py-2 text-sm leading-relaxed",
+                            message.isDeleted
+                                ? "bg-muted text-muted-foreground italic"
+                                : message.isOwn
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-muted"
+                        )}
+                    >
+                        {message.isDeleted
+                            ? "This message was deleted"
+                            : message.content}
+                    </div>
+
+                    {/* Actions Menu */}
+                    {message.isOwn && !message.isDeleted && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-muted-foreground hover:bg-muted rounded-full flex-shrink-0">
+                                    <MoreHorizontal className="size-4" />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                    onClick={handleDelete}
+                                    className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
+                                >
+                                    <Trash2 className="size-4 mr-2" />
+                                    Delete message
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     )}
-                >
-                    {message.isDeleted
-                        ? "This message was deleted"
-                        : message.content}
                 </div>
+
+                {/* Reactions */}
+                {message.reactions && (
+                    <MessageReactions
+                        messageId={message._id as Id<"messages">}
+                        reactions={message.reactions}
+                        isOwn={message.isOwn}
+                        isDeleted={message.isDeleted}
+                    />
+                )}
 
                 {/* Timestamp */}
                 <span className="text-[10px] text-muted-foreground mt-0.5 mx-1 opacity-50 group-hover:opacity-100 transition-opacity">
